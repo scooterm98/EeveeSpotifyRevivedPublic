@@ -1,8 +1,9 @@
 import Orion
 import UIKit
 
+// LyricsOnlyViewController doesn't exist in Spotify 9.1.x
 class LyricsOnlyViewControllerHook: ClassHook<UIViewController> {
-    typealias Group = BaseLyricsGroup
+    typealias Group = LyricsErrorHandlingGroup  // Not activated for 9.1.x
     
     static var targetName: String {
         switch EeveeSpotify.hookTarget {

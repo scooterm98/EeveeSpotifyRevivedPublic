@@ -1,8 +1,9 @@
 import Orion
 import UIKit
 
+// ErrorViewController doesn't exist in Spotify 9.1.x - separate group to avoid crashes
 class ErrorViewControllerHook: ClassHook<UIViewController> {
-    typealias Group = BaseLyricsGroup
+    typealias Group = LyricsErrorHandlingGroup  // Not activated for 9.1.x
     
     static var targetName: String {
         switch EeveeSpotify.hookTarget {

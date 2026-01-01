@@ -9,7 +9,13 @@ class SPTDataLoaderServiceHook: ClassHook<NSObject>, SpotifySessionDelegate {
         let shouldPatchPremium = BasePremiumPatchingGroup.isActive
         let shouldReplaceLyrics = BaseLyricsGroup.isActive
         
-        return (shouldReplaceLyrics && url.isLyrics)
+        let isLyricsURL = url.isLyrics
+        if isLyricsURL {
+            NSLog("[EeveeSpotify] Lyrics URL detected: \(url.absoluteString)")
+            NSLog("[EeveeSpotify] BaseLyricsGroup.isActive = \(shouldReplaceLyrics)")
+        }
+        
+        return (shouldReplaceLyrics && isLyricsURL)
             || (shouldPatchPremium && (url.isCustomize || url.isPremiumPlanRow || url.isPremiumBadge || url.isPlanOverview))
     }
     
@@ -28,6 +34,13 @@ class SPTDataLoaderServiceHook: ClassHook<NSObject>, SpotifySessionDelegate {
             return
         }
         
+        // Debug: Log all URLs that contain "lyric" (case insensitive)
+        let urlString = url.absoluteString.lowercased()
+        if urlString.contains("lyric") {
+            NSLog("[EeveeSpotify] URL with 'lyric': \(url.absoluteString)")
+            NSLog("[EeveeSpotify] Path: \(url.path)")
+        }
+        
         guard error == nil, shouldModify(url) else {
             orig.URLSession(session, task: task, didCompleteWithError: error)
             return
@@ -39,6 +52,7 @@ class SPTDataLoaderServiceHook: ClassHook<NSObject>, SpotifySessionDelegate {
         
         do {
             if url.isLyrics {
+                NSLog("[EeveeSpotify] Loading custom lyrics for: \(url.path)")
                 respondWithCustomData(
                     try getLyricsDataForCurrentTrack(
                         url.path,
@@ -47,6 +61,7 @@ class SPTDataLoaderServiceHook: ClassHook<NSObject>, SpotifySessionDelegate {
                     task: task,
                     session: session
                 )
+                NSLog("[EeveeSpotify] Custom lyrics loaded successfully")
                 return
             }
             

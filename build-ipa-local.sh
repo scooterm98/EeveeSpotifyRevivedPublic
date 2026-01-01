@@ -5,7 +5,7 @@ set -e
 # This script matches the GitHub Actions workflow but runs locally
 
 SPOTIFY_IPA="${1:-Decrypted IPA/com.spotify.client-9.1.6-Decrypted.ipa}"
-VERSION="6.4.5"
+VERSION="6.4.8"
 OUTPUT_DIR="Outputs/IPAS"
 
 # Determine package scheme (rootful=arm, rootless=arm64)

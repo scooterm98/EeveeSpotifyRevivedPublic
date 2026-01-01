@@ -59,7 +59,7 @@ func activatePremiumPatchingGroup() {
 }
 
 struct EeveeSpotify: Tweak {
-    static let version = "6.4.5"
+    static let version = "6.4.8"
     
     static var hookTarget: VersionHookTarget {
         let version = Bundle.main.infoDictionary!["CFBundleShortVersionString"] as! String
@@ -85,13 +85,12 @@ struct EeveeSpotify: Tweak {
         NSLog("[EeveeSpotify] Hook target: \(EeveeSpotify.hookTarget)")
         writeDebugLog("Hook target: \(EeveeSpotify.hookTarget)")
         
-        // For 9.1.x, only activate the absolute minimum hooks
+        // For 9.1.x, activate premium patching only (lyrics not yet supported)
         if EeveeSpotify.hookTarget == .v91 {
-            NSLog("[EeveeSpotify] Minimal hook mode for Spotify 9.1.x - only activating essential hooks")
-            writeDebugLog("Minimal mode for 9.1.x - most features disabled")
+            NSLog("[EeveeSpotify] Spotify 9.1.x detected - activating compatible features")
+            writeDebugLog("9.1.x mode - limited feature set")
             
-            // Only activate the base data loader service hook for basic premium patching
-            // DO NOT activate V91PremiumPatchingGroup - it has hooks that don't work on 9.1.x
+            // Premium patching
             if UserDefaults.patchType.isPatching {
                 NSLog("[EeveeSpotify] Activating base premium patching for 9.1.x")
                 writeDebugLog("Activating base premium patching for 9.1.x")
@@ -99,13 +98,17 @@ struct EeveeSpotify: Tweak {
                 writeDebugLog("Base premium patching activated")
             }
             
-            // Try universal settings integration (fallback gestures + multiple hook attempts)
+            // Note: Custom lyrics are NOT supported on 9.1.x
+            // The lyrics architecture is completely different and requires network request interception
+            // which doesn't work with 9.1.x's lyrics implementation
+            
+            // Settings integration
             NSLog("[EeveeSpotify] Activating universal settings integration for 9.1.x")
             writeDebugLog("Activating universal settings integration for 9.1.x")
             UniversalSettingsIntegrationGroup().activate()
             writeDebugLog("Universal settings integration activated")
             
-            NSLog("[EeveeSpotify] Initialization complete for 9.1.x (minimal mode)")
+            NSLog("[EeveeSpotify] Initialization complete for 9.1.x (with experimental lyrics)")
             writeDebugLog("Initialization complete for 9.1.x")
             return
         }
@@ -137,6 +140,10 @@ struct EeveeSpotify: Tweak {
             writeDebugLog("Activating lyrics hooks")
             BaseLyricsGroup().activate()
             writeDebugLog("Base lyrics hooks activated successfully")
+            
+            // Activate error handling hooks (not compatible with 9.1.x)
+            LyricsErrorHandlingGroup().activate()
+            writeDebugLog("Lyrics error handling hooks activated successfully")
             
             if EeveeSpotify.hookTarget == .latest {
                 writeDebugLog("Activating modern lyrics hooks")

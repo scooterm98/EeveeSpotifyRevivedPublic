@@ -3,13 +3,12 @@ import UIKit
 
 private var shouldOverrideLocalTrackURI = false
 
+// SPTPlayerTrack metadata hooks not compatible with 9.1.x
 class SPTPlayerTrackHook: ClassHook<NSObject> {
-    typealias Group = BaseLyricsGroup
-    static let targetName = EeveeSpotify.hookTarget == .v91
-        ? "UIView" // Dummy target for 9.1.6 (lyrics not supported)
-        : (EeveeSpotify.hookTarget == .latest
-            ? "SPTPlayerTrackImplementation"
-            : "SPTPlayerTrack")
+    typealias Group = LyricsErrorHandlingGroup  // Not activated for 9.1.x
+    static let targetName = EeveeSpotify.hookTarget == .latest
+        ? "SPTPlayerTrackImplementation"
+        : "SPTPlayerTrack"
 
     func metadata() -> [String: String] {
         var meta = orig.metadata()
@@ -30,22 +29,36 @@ class SPTPlayerTrackHook: ClassHook<NSObject> {
     }
 }
 
+// LyricsScrollProvider not compatible with 9.1.x
 class LyricsScrollProviderHook: ClassHook<NSObject> {
-    typealias Group = BaseLyricsGroup
-    static var targetName = EeveeSpotify.hookTarget == .v91
-        ? "UIView" // Dummy target for 9.1.6
-        : HookTargetNameHelper.lyricsScrollProvider
+    typealias Group = LyricsErrorHandlingGroup  // Not activated for 9.1.x
+    static let targetName = "Lyrics_CoreImpl.LyricsScrollProvider"
     
     func isEnabledForTrack(_ track: SPTPlayerTrack) -> Bool {
         return true
     }
 }
 
+// NPVScrollViewController not compatible with 9.1.x  
 class NPVScrollViewControllerHook: ClassHook<NSObject> {
-    typealias Group = ModernLyricsGroup
-    static var targetName = EeveeSpotify.hookTarget == .v91
-        ? "UIView" // Dummy target for 9.1.6
-        : "NowPlaying_ScrollImpl.NPVScrollViewController"
+    typealias Group = LyricsErrorHandlingGroup  // Not activated for 9.1.x (moved from ModernLyricsGroup)
+    static var targetName = "NowPlaying_ScrollImpl.NPVScrollViewController"
+
+    func viewWillAppear(_ animated: Bool) {
+        shouldOverrideLocalTrackURI = true
+        orig.viewWillAppear(animated)
+    }
+    
+    func viewWillDisappear(_ animated: Bool) {
+        shouldOverrideLocalTrackURI = false
+        orig.viewWillDisappear(animated)
+    }
+}
+
+// V91-compatible version of NPVScrollViewController hook
+class NPVScrollViewControllerV91Hook: ClassHook<NSObject> {
+    typealias Group = V91LyricsGroup
+    static var targetName = "NowPlaying_ScrollImpl.NPVScrollViewController"
 
     func viewWillAppear(_ animated: Bool) {
         shouldOverrideLocalTrackURI = true

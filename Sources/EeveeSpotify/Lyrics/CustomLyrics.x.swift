@@ -7,6 +7,8 @@ struct BaseLyricsGroup: HookGroup { }
 
 struct LegacyLyricsGroup: HookGroup { }
 struct ModernLyricsGroup: HookGroup { }
+struct V91LyricsGroup: HookGroup { }  // For Spotify 9.1.x - excludes incompatible hooks
+struct LyricsErrorHandlingGroup: HookGroup { }  // ErrorViewController hooks - not compatible with 9.1.x
 
 var lyricsState = LyricsLoadingState()
 
@@ -19,18 +21,26 @@ private let petitLyricsRepository = PetitLyricsRepository()
 //
 
 private func loadCustomLyricsForCurrentTrack() throws -> Lyrics {
+    NSLog("[EeveeSpotify] loadCustomLyricsForCurrentTrack called")
+    
     guard
         let track = statefulPlayer?.currentTrack() ??
                     nowPlayingScrollViewController?.loadedTrack
         else {
+            NSLog("[EeveeSpotify] No current track found!")
             throw LyricsError.noCurrentTrack
         }
     
+    let trackTitle = track.trackTitle()
+    let artistName = EeveeSpotify.hookTarget == .lastAvailableiOS14
+        ? track.artistTitle()
+        : track.artistName()
+    
+    NSLog("[EeveeSpotify] Loading lyrics for: \(trackTitle) - \(artistName)")
+    
     let searchQuery = LyricsSearchQuery(
-        title: track.trackTitle(),
-        primaryArtist: EeveeSpotify.hookTarget == .lastAvailableiOS14
-            ? track.artistTitle()
-            : track.artistName(),
+        title: trackTitle,
+        primaryArtist: artistName,
         spotifyTrackId: track.trackIdentifier
     )
     
