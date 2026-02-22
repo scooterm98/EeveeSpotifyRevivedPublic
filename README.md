@@ -1,3 +1,5 @@
+I will try and post updated ipa's here. :)
+
 ![Banner](Images/banner.png?)
 
 # EeveeSpotify
